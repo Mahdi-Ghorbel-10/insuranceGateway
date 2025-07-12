@@ -1,6 +1,12 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+class Clinic(models.Model):
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
 class User(AbstractUser):
     ROLE_CHOICES = (
         ('doctor', 'Doctor'),
@@ -12,10 +18,7 @@ class User(AbstractUser):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
     specialty = models.CharField(max_length=100, blank=True, null=True)
     license_number = models.CharField(max_length=100, blank=True, null=True)
-
-class Clinic(models.Model):
-    name = models.CharField(max_length=255)
-    admin = models.ForeignKey(User, on_delete=models.CASCADE, related_name='administered_clinics')
+    clinic = models.ForeignKey(Clinic, on_delete=models.SET_NULL, related_name='staff', null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -32,14 +35,26 @@ class Pharmacy(models.Model):
     def __str__(self):
         return self.name
 
+class FormTemplate(models.Model):
+    name = models.CharField(max_length=255)
+    specialty = models.CharField(max_length=100, unique=True)
+    template_schema = models.JSONField() # Defines the form fields
+
+    def __str__(self):
+        return f"{self.name} ({self.specialty})"
+
 class Consultation(models.Model):
     doctor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='consultations')
     patient_insurance_id = models.CharField(max_length=255)
-    diagnosis_token = models.CharField(max_length=255)
-    prescription_token = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
 
 class Contract(models.Model):
+    diagnosis_token = models.CharField(max_length=255, null=True, blank=True)
+    prescription_token = models.CharField(max_length=255, null=True, blank=True)
+    form_data = models.JSONField(null=True, blank=True) # For specialty-specific form data
+    parent_contract = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='follow_on_contracts')
+    doctor_signature = models.TextField(blank=True, null=True)
+    pharmacist_signature = models.TextField(blank=True, null=True)
     STATUS_CHOICES = (
         ('draft', 'Draft'),
         ('ready_for_pharmacy', 'Ready for Pharmacy'),
@@ -61,9 +76,9 @@ class Contract(models.Model):
 
 class FulfilledItem(models.Model):
     contract = models.ForeignKey(Contract, on_delete=models.CASCADE, related_name='fulfilled_items')
-    medication_name = models.CharField(max_length=255)
-    quantity = models.PositiveIntegerField()
+    item_description = models.CharField(max_length=255) # e.g., "Aspirin 100mg"
+    quantity_fulfilled = models.PositiveIntegerField()
     fulfilled_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.medication_name} for contract {self.contract.id}"
+        return f"{self.item_description} for contract {self.contract.id}"

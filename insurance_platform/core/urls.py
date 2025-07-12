@@ -7,6 +7,7 @@ from .views import (
     PharmacyViewSet,
     ConsultationViewSet,
     ContractViewSet,
+    FormTemplateViewSet,
     LoginView
 )
 
@@ -17,6 +18,7 @@ router.register(r'insurers', InsurerViewSet, basename='insurer')
 router.register(r'pharmacies', PharmacyViewSet, basename='pharmacy')
 router.register(r'consultations', ConsultationViewSet, basename='consultation')
 router.register(r'contracts', ContractViewSet, basename='contract')
+router.register(r'form-templates', FormTemplateViewSet, basename='formtemplate')
 
 urlpatterns = [
     path('', include(router.urls)),
