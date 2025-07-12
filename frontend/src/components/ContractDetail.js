@@ -1,0 +1,50 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useParams } from 'react-router-dom';
+
+function ContractDetail() {
+  const { id } = useParams();
+  const [contract, setContract] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchContract = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`/api/contracts/${id}/`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        setContract(response.data);
+        setLoading(false);
+      } catch (error) {
+        console.error('Failed to fetch contract details', error);
+        setLoading(false);
+      }
+    };
+
+    fetchContract();
+  }, [id]);
+
+  if (loading) {
+    return <div>Loading contract details...</div>;
+  }
+
+  if (!contract) {
+    return <div>Contract not found.</div>;
+  }
+
+  return (
+    <div className="container">
+      <h2>Contract Detail #{contract.id}</h2>
+      <p><strong>Status:</strong> {contract.status}</p>
+      <p><strong>Insurer:</strong> {contract.insurer}</p>
+      <p><strong>Pharmacy:</strong> {contract.pharmacy}</p>
+      <p><strong>External Ref ID:</strong> {contract.external_ref_id || 'N/A'}</p>
+      {/* Decrypted data would be handled here in a real app */}
+    </div>
+  );
+}
+
+export default ContractDetail;
