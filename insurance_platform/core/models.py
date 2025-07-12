@@ -53,7 +53,7 @@ class Contract(models.Model):
     )
     consultation = models.ForeignKey(Consultation, on_delete=models.CASCADE, related_name='contracts', null=True, blank=True)
     insurer = models.ForeignKey(Insurer, on_delete=models.CASCADE, related_name='contracts')
-    pharmacy = models.ForeignKey(Pharmacy, on_delete=models.CASCADE, related_name='contracts', null=True, blank=True)
+    claimed_by_pharmacy = models.ForeignKey(Pharmacy, on_delete=models.SET_NULL, related_name='claimed_contracts', null=True, blank=True)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='draft')
     external_ref_id = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)

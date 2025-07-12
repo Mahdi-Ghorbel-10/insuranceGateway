@@ -62,7 +62,8 @@ class ContractViewSet(viewsets.ModelViewSet):
         if user.role == 'doctor':
             return Contract.objects.filter(consultation__doctor=user)
         elif user.role == 'pharmacist':
-            return Contract.objects.filter(pharmacy__user=user) # Assuming Pharmacy has a user link
+            # Pharmacists can see unclaimed contracts and contracts they have claimed
+            return Contract.objects.filter(models.Q(claimed_by_pharmacy=None) | models.Q(claimed_by_pharmacy__user=user))
         elif user.role == 'insurer':
             return Contract.objects.filter(insurer__user=user) # Assuming Insurer has a user link
         elif user.is_staff:
@@ -71,9 +72,27 @@ class ContractViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         # Placeholder for creating a contract
-        # In a real implementation, you would get the consultation, insurer, etc.
-        # from the request data and create the contract.
+        # The pharmacy is no longer chosen at creation
         serializer.save()
+
+    @action(detail=True, methods=['post'])
+    def claim(self, request, pk=None):
+        """
+        Allows a pharmacist to claim a contract.
+        """
+        contract = self.get_object()
+        user = request.user
+        if user.role != 'pharmacist':
+            return Response({'status': 'permission denied'}, status=status.HTTP_403_FORBIDDEN)
+        if contract.claimed_by_pharmacy is not None:
+            return Response({'status': 'contract already claimed'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Assuming the pharmacist user is linked to a Pharmacy object
+        pharmacy = Pharmacy.objects.get(user=user)
+        contract.claimed_by_pharmacy = pharmacy
+        contract.status = 'ready_for_pharmacy'
+        contract.save()
+        return Response({'status': 'contract claimed'})
 
     @action(detail=True, methods=['put'], serializer_class=ContractUpdateSerializer)
     def fill(self, request, pk=None):

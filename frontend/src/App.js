@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import Login from './components/Login';
 import ContractList from './components/ContractList';
 import ContractDetail from './components/ContractDetail';
+import ContractCreate from './components/ContractCreate';
 import Home from './components/Home';
 import './App.css';
 
@@ -21,6 +22,9 @@ function App() {
             <li>
               <Link to="/contracts">Contracts</Link>
             </li>
+            <li>
+              <Link to="/contracts/new">Create Contract</Link>
+            </li>
           </ul>
         </nav>
 
@@ -29,6 +33,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/contracts" element={<ContractList />} />
+          <Route path="/contracts/new" element={<ContractCreate />} />
           <Route path="/contracts/:id" element={<ContractDetail />} />
           <Route path="/" element={<Home />} />
         </Routes>

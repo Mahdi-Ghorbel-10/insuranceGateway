@@ -15,7 +15,7 @@ class ContractSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contract
         fields = '__all__'
-        read_only_fields = ['status', 'created_at', 'updated_at']
+        read_only_fields = ['status', 'created_at', 'updated_at', 'claimed_by_pharmacy']
 
 class ContractUpdateSerializer(serializers.ModelSerializer):
     class Meta:

@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 function ContractList() {
   const [contracts, setContracts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const user = JSON.parse(localStorage.getItem('user'));
 
   useEffect(() => {
     const fetchContracts = async () => {
@@ -32,12 +33,15 @@ function ContractList() {
 
   return (
     <div className="container">
-      <h2>Your Contracts</h2>
+      <h2>{user && user.role === 'pharmacist' ? 'Available and Claimed Contracts' : 'Your Contracts'}</h2>
       <ul>
         {contracts.map(contract => (
           <li key={contract.id}>
             <Link to={`/contracts/${contract.id}`}>
               Contract #{contract.id} - Status: {contract.status}
+              {user && user.role === 'pharmacist' && (
+                <span> - {contract.claimed_by_pharmacy ? `Claimed by You` : 'Unclaimed'}</span>
+              )}
             </Link>
           </li>
         ))}
