@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=insurance_platform
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    networks:
+      - app-network
+
+  backend:
+    build: ./insurance_platform
+    command: >
+      sh -c "./wait-for-db.sh db &&
+             python manage.py migrate &&
+             gunicorn insurance_platform.wsgi:application --bind 0.0.0.0:8000"
+    volumes:
+      - ./insurance_platform:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgres://user:password@db:5432/insurance_platform
+      - SECRET_KEY=a-secure-secret-key-for-docker
+      - DEBUG=1
+    networks:
+      - app-network
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge
